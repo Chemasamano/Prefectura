@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Para produccion con PostgreSQL, cambia esto a "postgresql"
+  // (ver .env.example / README para el detalle de la migracion)
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id           String   @id @default(uuid())
+  nombre       String
+  usuario      String   @unique
+  passwordHash String
+  rol          String   // 'admin' | 'prefecto'
+  activo       Boolean  @default(true)
+  creadoEn     DateTime @default(now())
+}
+
+model Estudiante {
+  id            String     @id @default(uuid())
+  nombre        String
+  grupo         String
+  activo        Boolean    @default(true)
+  estatus       String     @default("regular") // regular | recursador | nuevo_ingreso
+  creadoEn      DateTime   @default(now())
+  actualizadoEn DateTime   @updatedAt
+  reportes      Reporte[]
+
+  @@index([grupo])
+  @@index([nombre])
+}
+
+model Reporte {
+  id           String     @id @default(uuid())
+  estudianteId String
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  tipos        String     // arreglo JSON serializado, ej. ["pantalon","pelea"]
+  fecha        String     // fecha de la incidencia, formato YYYY-MM-DD
+  notas        String?
+  prefecto     String
+  resuelto     Boolean    @default(false)
+  resolvedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([estudianteId])
+}
+
+model Sesion {
+  id       String @id @default(uuid())
+  grupo    String
+  dia      String // Lunes | Martes | Miercoles | Jueves | Viernes
+  modulo   Int
+  inicio   String // HH:MM
+  fin      String // HH:MM
+  materia  String
+  profesor String
+  aula     String
+
+  @@index([grupo, dia])
+}
